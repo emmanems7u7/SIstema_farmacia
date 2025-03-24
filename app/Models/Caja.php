@@ -23,6 +23,6 @@ class Caja extends Model
     //un arqueo puede tener muchos moviientos
     public function movimientos()
     {
-        return $this->hasMaby(MovimientoCaja::class);
+        return $this->hasMany(MovimientoCaja::class);
     }
 }

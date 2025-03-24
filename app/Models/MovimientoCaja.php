@@ -10,6 +10,7 @@ class MovimientoCaja extends Model
 {
     use HasFactory;
     protected $fillable = [
+        'venta_id',
         'tipo',
         'monto',
         'descripcion',
@@ -22,4 +23,9 @@ class MovimientoCaja extends Model
     {
         return $this->belongsTo(Caja::class);
     }
+    public function detalleVentas()
+    {
+        return $this->hasMany(DetalleVenta::class, 'venta_id', 'venta_id');
+    }
+
 }

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 use Illuminate\Support\Carbon;
 use App\Models\Caja;
+use App\Models\DetalleVenta;
+use App\Models\DetalleCompra;
 use App\Models\MovimientoCaja;
 use App\Models\Sucursal;
 use Illuminate\Http\Request;
@@ -21,10 +23,82 @@ class CajaController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function ingresos(Request $request)
     {
-        //
+        $sucursal = Sucursal::find(Auth::user()->sucursal_id);
+
+        // Obtener fecha de búsqueda
+        $fecha = $request->input('fecha');
+
+
+        // Consulta con paginación
+        $cajas = Caja::where('sucursal_id', $sucursal->id)
+            ->where('estado', 0)
+            ->when($fecha, function ($query) use ($fecha) {
+                $query->whereHas('movimientos', function ($movimientosQuery) use ($fecha) {
+
+                    $movimientosQuery->whereDate('fecha_movimiento', $fecha);
+
+                });
+            })
+            ->paginate(perPage: 2); // Paginar por cajas
+
+        $caja_movs = [];
+        $totales_caja = [];
+
+        foreach ($cajas as $caja) {
+            $movimientos = MovimientoCaja::where('caja_id', $caja->id)->get();
+
+            $total_monto = 0; // Inicializamos el total de la caja
+
+            $movimientos_con_detalle = $movimientos->map(function ($movimiento) use (&$total_monto) {
+                $detalle_ventas = collect(); // Inicializar como colección vacía
+
+                switch ($movimiento->tipo) {
+                    case 'venta':
+                        $detalle_ventas = DetalleVenta::where('venta_id', $movimiento->venta_id)
+                            ->with('producto')
+                            ->get()
+                            ->map(function ($detalle) {
+                                return [
+                                    'id' => $detalle->id,
+                                    'cantidad' => $detalle->cantidad,
+                                    'producto_precio' => $detalle->producto->precio_venta ?? 0,
+                                    'producto_nombre' => $detalle->producto->nombre ?? 'Producto no encontrado',
+                                ];
+                            });
+                        $total_monto += $movimiento->monto; // SUMAR si es una venta
+                        break;
+
+                    case 'compra':
+                        $detalle_ventas = DetalleCompra::where('compra_id', $movimiento->venta_id)
+                            ->with('producto')
+                            ->get()
+                            ->map(function ($detalle) {
+                                return [
+                                    'id' => $detalle->id,
+                                    'cantidad' => $detalle->cantidad,
+                                    'producto_precio' => $detalle->producto->precio_venta ?? 0,
+                                    'producto_nombre' => $detalle->producto->nombre ?? 'Producto no encontrado',
+                                ];
+                            });
+                        $total_monto -= $movimiento->monto; // RESTAR si es una compra
+                        break;
+                }
+
+                $movimiento->detalle_ventas = $detalle_ventas;
+                return $movimiento;
+            });
+
+            $caja_movs[$caja->id] = $movimientos_con_detalle;
+            $totales_caja[$caja->id] = $total_monto; // Guardamos el total actualizado con compras restadas
+        }
+
+        // dd($caja_movs);
+        return view('admin.cajas.ingresos', compact('caja_movs', 'totales_caja', 'cajas', 'fecha'));
     }
+
+
 
     /**
      * Store a newly created resource in storage.
@@ -33,7 +107,6 @@ class CajaController extends Controller
     {
         $request->validate([
             'fecha_apertura' => 'required|date',
-            'fecha_cierre' => 'nullable|date|after_or_equal:fecha_apertura',
             'monto_inicial' => 'nullable|numeric|min:0',
             'descripcion' => 'nullable|string|max:255',
         ]);
@@ -42,7 +115,7 @@ class CajaController extends Controller
         Caja::create([
             'sucursal_id' => $sucursal->id,
             'fecha_apertura' => $request->fecha_apertura,
-            'fecha_cierre' => $request->fecha_cierre,
+            'fecha_cierre' => null,
             'monto_inicial' => $request->monto_inicial,
             'estado' => 1,
             'descripcion' => $request->descripcion,

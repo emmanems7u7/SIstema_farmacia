@@ -42,7 +42,7 @@
                                 <tr>
                                     <td style="text-align: center">{{ $contador++ }}</td>
                                     <td>{{ $caja->fecha_apertura }}</td>
-                                    <td>{{ $caja->fecha_cierre }}</td>
+                                    <td>{{ $caja->fecha_cierre ?? 'Caja sin cerrar'}}</td>
                                     <td> {{ $caja->monto_inicial }}</td>
                                     <td> {{ $caja->monto_final ?? 'Caja sin cerrar' }} </td>
                                     <td> {{ $caja->descripcion }}</td>
@@ -173,11 +173,7 @@
                                             name="fecha_apertura" required>
                                     </div>
 
-                                    <div class="mb-3">
-                                        <label for="fecha_cierre" class="form-label">Fecha de Cierre</label>
-                                        <input type="datetime-local" class="form-control" id="fecha_cierre"
-                                            name="fecha_cierre">
-                                    </div>
+
 
                                     <div class="mb-3">
                                         <label for="monto_inicial" class="form-label">Monto Inicial</label>
@@ -185,11 +181,7 @@
                                             name="monto_inicial">
                                     </div>
 
-                                    <div class="mb-3">
-                                        <label for="monto_final" class="form-label">Monto Final</label>
-                                        <input type="number" step="0.01" class="form-control" id="monto_final"
-                                            name="monto_final">
-                                    </div>
+
 
                                     <div class="mb-3">
                                         <label for="descripcion" class="form-label">Descripción</label>

@@ -7,10 +7,11 @@ use App\Models\DetalleCompra;
 use App\Models\Producto;
 use App\Models\TmpCompra;
 use App\Models\Proveedor;
+use App\Models\MovimientoCaja;
 use App\Models\Laboratorio;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth; // Importar Auth
-
+use App\Models\Caja;
 class CompraController extends Controller
 {
     /**
@@ -18,9 +19,9 @@ class CompraController extends Controller
      */
     public function index()
     {
-        $compras = Compra::with(['detalles','laboratorio'])->get();
+        $compras = Compra::with(['detalles', 'laboratorio'])->get();
 
-        
+
         return view('admin.compras.index', compact('compras'));
     }
 
@@ -30,14 +31,14 @@ class CompraController extends Controller
     public function create()
     {
         $productos = Producto::where('sucursal_id', Auth::user()->sucursal_id)->get();
-     //   $proveedores = Proveedor::where('sucursal_id', Auth::user()->sucursal_id)->get();
+        //   $proveedores = Proveedor::where('sucursal_id', Auth::user()->sucursal_id)->get();
         $laboratorios = Laboratorio::all();
-    $session_id = session()->getId();
-    $tmp_compras = TmpCompra::where('session_id',$session_id)->get();
+        $session_id = session()->getId();
+        $tmp_compras = TmpCompra::where('session_id', $session_id)->get();
 
-        return view('admin.compras.create', compact('productos',  'laboratorios','tmp_compras'));
+        return view('admin.compras.create', compact('productos', 'laboratorios', 'tmp_compras'));
     }
-    
+
     public function store(Request $request)
     {
         // Lógica para almacenar la compra
@@ -47,11 +48,17 @@ class CompraController extends Controller
 
         // Validación de los datos de entrada
         $request->validate([
-            
+
             'fecha' => 'required',
             'comprobante' => 'required',
             'precio_total' => 'required', //
         ]);
+
+        $caja = Caja::whereDate('fecha_apertura', $request->fecha)->first();
+
+        if (!$caja) {
+            return redirect()->back()->with('error', 'No existe una caja con esta fecha.');
+        }
 
         // Crear un nuevo laboratorio
         $compra = new Compra();
@@ -63,38 +70,51 @@ class CompraController extends Controller
         $compra->laboratorio_id = $request->laboratorio_id;
         $compra->save();
 
+
+
+
+        $mov_caja = MovimientoCaja::create([
+            'venta_id' => $compra->id,
+            'tipo' => 'compra',
+            'monto' => $request->precio_total,
+            'descripcion' => 'compra',
+            'fecha_movimiento' => $request->fecha,
+            'caja_id' => $caja->id
+        ]);
+
+
         $session_id = session()->getId();
 
 
         // Redirigir al índice con un mensaje de éxito
-       $tmp_compras = TmpCompra::where('session_id',$session_id)->get();
+        $tmp_compras = TmpCompra::where('session_id', $session_id)->get();
 
-       foreach($tmp_compras as $tmp_compra){
-//traer toda la informacion del producto
-        $producto = Producto::where('id',$tmp_compra->producto_id)->first();
-        $detalle_compra = new DetalleCompra();
-        $detalle_compra->cantidad = $tmp_compra->cantidad;
-     
-        $detalle_compra->compra_id = $compra->id;
-        $detalle_compra->producto_id = $tmp_compra->producto_id;
-       
-        $detalle_compra->save();
+        foreach ($tmp_compras as $tmp_compra) {
+            //traer toda la informacion del producto
+            $producto = Producto::where('id', $tmp_compra->producto_id)->first();
+            $detalle_compra = new DetalleCompra();
+            $detalle_compra->cantidad = $tmp_compra->cantidad;
 
-//SUMAR 
-        $producto->stock += $tmp_compra->cantidad;
-        $producto->save();
+            $detalle_compra->compra_id = $compra->id;
+            $detalle_compra->producto_id = $tmp_compra->producto_id;
 
+            $detalle_compra->save();
 
+            //SUMAR 
+            $producto->stock += $tmp_compra->cantidad;
+            $producto->save();
 
 
-       }
-       //QUE SE ELIMI LA TABLA DE TEMPORAL
-       TmpCompra::where('session_id',$session_id)->delete();
-       return redirect()->route('admin.compras.index')
-       ->with('mensaje','Se registro el producto')
-       ->with('icono','success');
 
-       
+
+        }
+        //QUE SE ELIMI LA TABLA DE TEMPORAL
+        TmpCompra::where('session_id', $session_id)->delete();
+        return redirect()->route('admin.compras.index')
+            ->with('mensaje', 'Se registro el producto')
+            ->with('icono', 'success');
+
+
     }
 
     /**
@@ -103,58 +123,55 @@ class CompraController extends Controller
     public function show($id)
     {
         //
-        $compra = Compra::with('detalles','laboratorio')->findOrFail($id);
-        return view('admin.compras.show',compact('compra'));
+        $compra = Compra::with('detalles', 'laboratorio')->findOrFail($id);
+        return view('admin.compras.show', compact('compra'));
     }
 
     /**
      * Show the form for editing the specified resource.
      */
     public function edit($id)
-    
-    
     {
-    
+
         //
-        $compra = Compra::with('detalles','laboratorio')->findOrFail($id);
+        $compra = Compra::with('detalles', 'laboratorio')->findOrFail($id);
         $laboratorios = Laboratorio::all();
         $productos = Producto::all();
-        return view('admin.compras.edit',compact('compra','laboratorios','productos'));
+        return view('admin.compras.edit', compact('compra', 'laboratorios', 'productos'));
     }
-    
+
 
 
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, $id)
-
     {
-         // Validación de los datos de entrada
-         $request->validate([
-        'fecha' => 'required',
-        'comprobante' => 'required',
-        'precio_total' => 'required', //
-    ]);
+        // Validación de los datos de entrada
+        $request->validate([
+            'fecha' => 'required',
+            'comprobante' => 'required',
+            'precio_total' => 'required', //
+        ]);
 
-    // Crear un nuevo laboratorio
-    $compra = Compra::find($id);
-    $compra->fecha = $request->fecha;
-    $compra->comprobante = $request->comprobante;
-    $compra->precio_total = $request->precio_total;
+        // Crear un nuevo laboratorio
+        $compra = Compra::find($id);
+        $compra->fecha = $request->fecha;
+        $compra->comprobante = $request->comprobante;
+        $compra->precio_total = $request->precio_total;
 
-    $compra->sucursal_id = Auth::user()->sucursal_id;
-    $compra->laboratorio_id = $request->laboratorio_id;
-    $compra->save();
+        $compra->sucursal_id = Auth::user()->sucursal_id;
+        $compra->laboratorio_id = $request->laboratorio_id;
+        $compra->save();
 
-    $session_id = session()->getId();
+        $session_id = session()->getId();
 
 
-      
-    
+
+
         return redirect()->route('admin.compras.index')
-        ->with('mensaje', 'Compra actualizada correctamente')
-        ->with('icono','success');
+            ->with('mensaje', 'Compra actualizada correctamente')
+            ->with('icono', 'success');
 
     }
     /**
@@ -165,7 +182,7 @@ class CompraController extends Controller
         //
 
         $compra = Compra::find($id);
-        foreach ($compra->detalles as $detalle){
+        foreach ($compra->detalles as $detalle) {
             $producto = Producto::find($detalle->producto_id);
             $producto->stock -= $detalle->cantidad;
             $producto->save();
@@ -174,8 +191,8 @@ class CompraController extends Controller
         Compra::destroy($id);
 
         return redirect()->route('admin.compras.index')
-        ->with('mensaje', 'Se elimino la compra correctamente')
-        ->with('icono','success');
+            ->with('mensaje', 'Se elimino la compra correctamente')
+            ->with('icono', 'success');
 
     }
 }

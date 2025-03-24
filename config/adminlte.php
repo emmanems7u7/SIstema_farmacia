@@ -319,7 +319,7 @@ return [
                 [
                     'text' => 'Sucursales',
                     'icon' => 'fa-regular fa-building',
-                   
+
                     'url' => 'admin/vista',
                 ],
                 [
@@ -330,7 +330,7 @@ return [
                 [
                     'text' => 'Roles',
                     'icon' => ' fa-regular fa-rectangle-list',
-                   
+
                     'url' => 'admin/roles',
                 ],
             ],
@@ -344,24 +344,24 @@ return [
             'submenu' => [
                 [
                     'text' => 'Categorias',
-                    'icon' => 'fa-solid fa-newspaper',                  
+                    'icon' => 'fa-solid fa-newspaper',
                     'url' => 'admin/categorias',
-                    
+
                 ],
                 [
                     'text' => 'laboratorio',
                     'icon' => 'fa-solid fa-building',
                     'url' => 'admin/laboratorios',
-    
+
                 ],
 
                 [
                     'text' => 'Proveedores',
                     'icon' => 'fa-solid fa-list',
                     'url' => 'admin/proveedores',
-    
+
                 ],
-                
+
             ],
         ],
         [
@@ -369,14 +369,14 @@ return [
             'url' => 'admin/productos',
             'icon' => 'fas fa-fw fa-gear',
 
-            'classes' =>'bg-blue text-white',
+            'classes' => 'bg-blue text-white',
         ],
         [
             'text' => 'Clientes',
             'url' => 'admin/clientes',
             'icon' => 'fas fa-fw fa-gear',
 
-            'classes' =>'bg-blue text-white',
+            'classes' => 'bg-blue text-white',
         ],
 
         [
@@ -386,13 +386,13 @@ return [
             'submenu' => [
                 [
                     'text' => 'Gestionar compras',
-                    'icon' => 'fa-solid fa-newspaper',                  
+                    'icon' => 'fa-solid fa-newspaper',
                     'url' => 'admin/compras',
-                    
-                ],
-               
 
-              
+                ],
+
+
+
             ],
         ],
 
@@ -403,13 +403,13 @@ return [
             'submenu' => [
                 [
                     'text' => 'Listao de ventas',
-                    'icon' => 'fa-solid fa-newspaper',                  
+                    'icon' => 'fa-solid fa-newspaper',
                     'url' => 'admin/ventas',
-                    
-                ],
-              
 
-              
+                ],
+
+
+
             ],
         ],
 
@@ -420,40 +420,40 @@ return [
             'submenu' => [
                 [
                     'text' => 'Listado de caja',
-                    'icon' => 'fa-solid fa-newspaper',                  
+                    'icon' => 'fa-solid fa-newspaper',
                     'url' => 'admin/cajas',
-                    
+
                 ],
-             
+
                 [
                     'text' => 'Ingresos',
-                    'icon' => 'fa-solid fa-newspaper',                  
-                    'url' => 'admin/cajas',
-                    
+                    'icon' => 'fa-solid fa-newspaper',
+                    'url' => 'admin/ingresos',
+
                 ],
                 [
                     'text' => 'Egresos',
-                    'icon' => 'fa-solid fa-newspaper',                  
+                    'icon' => 'fa-solid fa-newspaper',
                     'url' => 'admin/cajas',
-                    
-                ],
-              
 
-              
+                ],
+
+
+
             ],
         ],
 
-       
+
 
         [
             'text' => 'Salir',
             'url' => 'admin/productos',
             'icon' => 'fas fa-fw fa-gear',
 
-            'classes' =>'bg-blue text-white',
+            'classes' => 'bg-blue text-white',
         ],
 
-       
+
     ],
 
     /*
@@ -497,7 +497,7 @@ return [
                 [
                     'type' => 'css',
                     'asset' => true,
-                    'location' =>'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css'
+                    'location' => 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css'
                 ],
             ],
 

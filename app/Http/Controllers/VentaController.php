@@ -75,9 +75,7 @@ class VentaController extends Controller
 
         // Validación de los datos de entrada
         $request->validate([
-
             'fecha' => 'required',
-
             'precio_total' => 'required', //
         ]);
 
@@ -91,14 +89,6 @@ class VentaController extends Controller
             return redirect()->back()->with('error', 'No existe una caja con esta fecha.');
         }
 
-        $mov_caja = MovimientoCaja::create([
-            'tipo' => 'venta',
-            'monto' => $request->precio_total,
-            'descripcion' => 'venta',
-            'fecha_movimiento' => $request->fecha,
-            'caja_id' => $caja->id
-        ]);
-
         $ventas = new Venta();
         $ventas->fecha = now();
         $ventas->precio_total = $request->precio_total;
@@ -106,6 +96,16 @@ class VentaController extends Controller
         $ventas->sucursal_id = Auth::user()->sucursal_id;
         $ventas->cliente_id = $request->cliente_id;
         $ventas->save();
+
+
+        $mov_caja = MovimientoCaja::create([
+            'venta_id' => $ventas->id,
+            'tipo' => 'venta',
+            'monto' => $request->precio_total,
+            'descripcion' => 'venta',
+            'fecha_movimiento' => $request->fecha,
+            'caja_id' => $caja->id
+        ]);
 
         $session_id = session()->getId();
 

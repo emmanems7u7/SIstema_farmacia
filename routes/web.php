@@ -156,3 +156,5 @@ Route::put('/admin/cajas/{id}', [App\Http\Controllers\CajaController::class, 'up
 Route::delete('/admin/cajas/{id}', [App\Http\Controllers\CajaController::class, 'destroy'])->name('admin.cajas.destroy')->middleware('auth');
 
 Route::get('/admin/cajas/cerrar/{id}', [App\Http\Controllers\CajaController::class, 'cerrar'])->name('caja.cerrar')->middleware('auth');
+
+Route::get('/admin/ingresos', [App\Http\Controllers\CajaController::class, 'ingresos'])->name('admin.cajas.ingresos')->middleware('auth');
